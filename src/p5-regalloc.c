@@ -1,6 +1,7 @@
 /**
  * @file p5-regalloc.c
  * @brief Compiler phase 5: register allocation
+ * Team Lima: Alice Robertson and Alexander Bain
  */
 #include "p5-regalloc.h"
 
@@ -60,6 +61,27 @@ void insert_load(int bp_offset, int pr, ILOCInsn* prev_insn)
     prev_insn->next = new_insn;
 }
 
+// ****** beginning of new code added by Alice ****** //
+
+/**
+ * @brief main function to be used for register allocation
+ * 
+ * @param list list of ILOC instructions (ILOCInsn*)
+ * @param num_physical_registers number of phyiscal registers that can be used
+ */
 void allocate_registers (InsnList* list, int num_physical_registers)
 {
+    // for each instruction i in program
+    FOR_EACH(ILOCInsn*, i, list)
+    {
+        // save reference to stack allocator instruction if i is a call label
+        if (strcmp(i->form, "call"))
+        {
+            // idk how to implement this lol
+        }
+
+        // reset name[] and offset[] if i is a leader
+        // also dont know how to do this
+
+    }
 }
