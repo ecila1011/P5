@@ -11,6 +11,18 @@
 #define MAX_PHYSICAL_REGS 32
 
 /**
+ * Adding this from the given pseudocode
+ */
+
+// main physical/virtual mapping (INVALID indicates empty register)
+// name : physical register id => virtual register id
+Operand name[MAX_PHYSICAL_REGS];
+
+// tracks stack offset for spilled virtual registers
+// offset : virtual register id => int
+int offset[MAX_VIRTUAL_REGS];
+
+/**
  * @brief Insert a store instruction to spill a register to the stack
  * 
  * We need to allocate a new slot in the stack from for the current
@@ -75,13 +87,22 @@ void allocate_registers (InsnList* list, int num_physical_registers)
     FOR_EACH(ILOCInsn*, i, list)
     {
         // save reference to stack allocator instruction if i is a call label
-        if (strcmp(i->form, "call"))
+        if (i->form == CALL)
         {
             // idk how to implement this lol
+            
         }
 
         // reset name[] and offset[] if i is a leader
         // also dont know how to do this
+
+        ILOCInsn* readregs = ILOCInsn_get_read_registers(i);
+        Operand* list = readregs->op;
+
+        // FOR_EACH(Operand*, read, list)
+        // {
+
+        // }
 
     }
 }
