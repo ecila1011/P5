@@ -86,6 +86,7 @@ void allocate_registers (InsnList* list, int num_physical_registers)
     // for each instruction i in program
     FOR_EACH(ILOCInsn*, i, list)
     {
+        
         // save reference to stack allocator instruction if i is a call label
         if (i->form == CALL)
         {
@@ -106,3 +107,30 @@ void allocate_registers (InsnList* list, int num_physical_registers)
 
     }
 }
+
+Operand ensure(Operand vr)
+{
+    // Loop through physical registers (In the name array)
+    // If the vr is in there (check the ID), then return the physical register
+
+    // If not... allocate a physical register using allocate()
+    // If vr had to be spilled, then load it into a physical register using offset[vr id]
+    // Return the physical register
+
+    return;
+}
+
+Operand allocate(Operand vr)
+{
+    // Check if there's a free physical register (Probably just check if its null)
+    // Set name[pr] to vr's id
+    // Return the physical register
+
+    // If there's no free registers, then spill the physical register ya want to use to stack
+    // Set the name[pr] to the vr id
+    // Return the physical register
+}
+
+// Spill Method
+
+// Dist method
