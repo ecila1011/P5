@@ -37,15 +37,15 @@ int offset[MAX_VIRTUAL_REGS];
  * @param local_allocator Reference to the local frame allocator instruction
  * @returns BP-based offset where the register was spilled
  */
-int insert_spill(int pr, ILOCInsn* prev_insn, ILOCInsn* local_allocator)
+int insert_spill(int pr, ILOCInsn *prev_insn, ILOCInsn *local_allocator)
 {
     /* adjust stack frame size to add new spill slot */
     int bp_offset = local_allocator->op[1].imm - WORD_SIZE;
     local_allocator->op[1].imm = bp_offset;
 
     /* create store instruction */
-    ILOCInsn* new_insn = ILOCInsn_new_3op(STORE_AI,
-            register_with_id(pr), base_register(), int_const(bp_offset));
+    ILOCInsn *new_insn = ILOCInsn_new_3op(STORE_AI,
+                                          register_with_id(pr), base_register(), int_const(bp_offset));
 
     /* insert into code */
     new_insn->next = prev_insn->next;
@@ -62,18 +62,87 @@ int insert_spill(int pr, ILOCInsn* prev_insn, ILOCInsn* local_allocator)
  * @param prev_insn Reference to an instruction; the new instruction will be
  * inserted directly after this one
  */
-void insert_load(int bp_offset, int pr, ILOCInsn* prev_insn)
+void insert_load(int bp_offset, int pr, ILOCInsn *prev_insn)
 {
     /* create load instruction */
-    ILOCInsn* new_insn = ILOCInsn_new_3op(LOAD_AI,
-            base_register(), int_const(bp_offset), register_with_id(pr));
+    ILOCInsn *new_insn = ILOCInsn_new_3op(LOAD_AI,
+                                          base_register(), int_const(bp_offset), register_with_id(pr));
 
     /* insert into code */
     new_insn->next = prev_insn->next;
     prev_insn->next = new_insn;
 }
 
+/**
+ * @brief Replace a virtual register id with a physical register id
+ * 
+ * Every copy of "vr" will be replaced by "pr" in the given instruction.
+ * Note that in our implementation, we do not distinguish between virutal
+ * and physical registers explicitly.
+ * 
+ * @param vr Virtual register id that should be replaced
+ * @param pr Physical register id that it should be replaced by
+ * @param isnsn Instruction to modify
+ */
+void replace_register(int vr, int pr, ILOCInsn *insn)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        if (insn->op[i].type == VIRTUAL_REG && insn->op[i].id == vr)
+        {
+            insn->op[i].id = pr;
+        }
+    }
+}
+
 // ****** beginning of new code added by Alice ****** //
+
+Operand allocate(Operand vr)
+{
+    for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
+    {
+        // Check if there's a free physical register
+        // Invalid Im guessing is less than 0 but there's no INVALID enum
+        if (name[i].id < 0)
+        {
+            // Set name[pr] to vr
+            name[i] = vr;
+            // Return the physical register
+            return name[i];
+        }
+    }
+
+    // **Ignoring Spilling RN
+
+    // If there's no free registers, then spill the physical register ya want to use to stack
+    // Set the name[pr] to the vr id
+    // Return the physical register
+}
+
+Operand ensure(Operand vr)
+{
+    // Loop through physical registers (In the name array)
+    for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
+    {
+        // If the vr is in there (check the ID), then return the physical register
+        if (name[i].id == vr.id)
+        {
+            return name[i];
+        }
+    }
+
+    // If not... allocate a physical register using allocate()
+    // **Ignoring Spilling RN
+    return allocate(vr);
+    // If vr had to be spilled, then load it into a physical register using offset[vr id]
+    // Return the physical register
+
+    return;
+}
+
+// Spill Method
+
+// Dist method
 
 /**
  * @brief main function to be used for register allocation
@@ -81,56 +150,30 @@ void insert_load(int bp_offset, int pr, ILOCInsn* prev_insn)
  * @param list list of ILOC instructions (ILOCInsn*)
  * @param num_physical_registers number of phyiscal registers that can be used
  */
-void allocate_registers (InsnList* list, int num_physical_registers)
+void allocate_registers(InsnList *list, int num_physical_registers)
 {
     // for each instruction i in program
-    FOR_EACH(ILOCInsn*, i, list)
+    FOR_EACH(ILOCInsn *, i, list)
     {
-        
+
         // save reference to stack allocator instruction if i is a call label
         if (i->form == CALL)
         {
             // idk how to implement this lol
-            
         }
 
         // reset name[] and offset[] if i is a leader
         // also dont know how to do this
 
-        ILOCInsn* readregs = ILOCInsn_get_read_registers(i);
+        ILOCInsn *readregs = ILOCInsn_get_read_registers(i);
         Operand* list = readregs->op;
-
-        // FOR_EACH(Operand*, read, list)
-        // {
-
-        // }
-
+        for (int index = 0; index < 3; index++)
+        {
+            if (list[index].type != EMPTY)
+            {
+                Operand pr = allocate(list[index]);
+                replace_register(list[index].id, pr.id, i);
+            }
+        }
     }
 }
-
-Operand ensure(Operand vr)
-{
-    // Loop through physical registers (In the name array)
-    // If the vr is in there (check the ID), then return the physical register
-
-    // If not... allocate a physical register using allocate()
-    // If vr had to be spilled, then load it into a physical register using offset[vr id]
-    // Return the physical register
-
-    return;
-}
-
-Operand allocate(Operand vr)
-{
-    // Check if there's a free physical register (Probably just check if its null)
-    // Set name[pr] to vr's id
-    // Return the physical register
-
-    // If there's no free registers, then spill the physical register ya want to use to stack
-    // Set the name[pr] to the vr id
-    // Return the physical register
-}
-
-// Spill Method
-
-// Dist method
