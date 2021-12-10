@@ -16,7 +16,7 @@
 
 // main physical/virtual mapping (INVALID indicates empty register)
 // name : physical register id => virtual register id
-Operand name[MAX_PHYSICAL_REGS];
+int name[MAX_PHYSICAL_REGS];
 
 // tracks stack offset for spilled virtual registers
 // offset : virtual register id => int
@@ -97,21 +97,29 @@ void replace_register(int vr, int pr, ILOCInsn *insn)
 
 // ****** beginning of new code added by Alice ****** //
 
-Operand allocate(Operand vr)
+int allocate(int vr)
 {
     for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
     {
         // Check if there's a free physical register
         // Invalid Im guessing is less than 0 but there's no INVALID enum
-        if (name[i].id < 0)
+        if (name[i] == 0)
         {
             // Set name[pr] to vr
             name[i] = vr;
             // Return the physical register
-            return name[i];
+            return i;
+        }
+        else
+        {
+            // find pr that maximizes dist(name[pr])
+            // spill(pr)
+            // name[pr] = vr
+            // return pr
         }
     }
 
+    return 0;
     // **Ignoring Spilling RN
 
     // If there's no free registers, then spill the physical register ya want to use to stack
@@ -119,15 +127,23 @@ Operand allocate(Operand vr)
     // Return the physical register
 }
 
-Operand ensure(Operand vr)
+int ensure(int vr)
 {
     // Loop through physical registers (In the name array)
     for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
     {
         // If the vr is in there (check the ID), then return the physical register
-        if (name[i].id == vr.id)
+        if (name[i] == vr)
         {
             return name[i];
+        }
+        else
+        {
+            int pr = allocate(vr);
+            if (offset[vr] != EMPTY) 
+            {
+                insert_load(offset[vr], pr, NULL);
+            }
         }
     }
 
@@ -136,13 +152,15 @@ Operand ensure(Operand vr)
     return allocate(vr);
     // If vr had to be spilled, then load it into a physical register using offset[vr id]
     // Return the physical register
-
-    return;
 }
 
 // Spill Method
 
 // Dist method
+int dist(Operand vr)
+{
+    return 9999;
+}
 
 /**
  * @brief main function to be used for register allocation
@@ -160,20 +178,64 @@ void allocate_registers(InsnList *list, int num_physical_registers)
         if (i->form == CALL)
         {
             // idk how to implement this lol
+            // reset name and offset
         }
 
-        // reset name[] and offset[] if i is a leader
+        if (i->form == JUMP) 
+        {
+            // reset name and offset
+        }
+
         // also dont know how to do this
 
+        // get read registers and make a list of operands
         ILOCInsn *readregs = ILOCInsn_get_read_registers(i);
         Operand* list = readregs->op;
+        int count = -1;
+
+        // for each read register in i
         for (int index = 0; index < 3; index++)
         {
             if (list[index].type != EMPTY)
             {
-                Operand pr = allocate(list[index]);
-                // replace_register(list[index].id, pr.id, i);
+                count += 1;
+
+                int pr = ensure(list[index].id);          // make sure vr is in a phys reg
+                i->op[index].id = pr;                    // change register id
+
+                // if no future use
+                if (dist(list[index]) >= 9999) {
+                    // then free pr
+                    name[pr] = -1; 
+                }
             }
         }
+
+        // get write register
+        Operand writereg = ILOCInsn_get_write_register(i);
+
+        if (writereg.type != EMPTY)
+        {
+            int pr = allocate(writereg.id);          // make sure pr is available
+            //i->op[count+1].id = pr;                    // change register id
+
+            // if no future use
+            if (dist(writereg) >= 9999) {
+                // then free pr
+                name[pr] = -1; 
+            }
+        }
+
+
+        // ILOCInsn *readregs = ILOCInsn_get_read_registers(i);
+        // Operand* list = readregs->op;
+        // for (int index = 0; index < 3; index++)
+        // {
+        //     if (list[index].type != EMPTY)
+        //     {
+        //         Operand pr = allocate(list[index]);
+        //         // replace_register(list[index].id, pr.id, i);
+        //     }
+        // }
     }
 }
