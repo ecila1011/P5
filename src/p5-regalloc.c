@@ -172,7 +172,7 @@ void allocate_registers(InsnList *list, int num_physical_registers)
             if (list[index].type != EMPTY)
             {
                 Operand pr = allocate(list[index]);
-                replace_register(list[index].id, pr.id, i);
+                // replace_register(list[index].id, pr.id, i);
             }
         }
     }

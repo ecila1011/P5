@@ -1,6 +1,6 @@
-A_memcheck                     FAIL (see outputs/A_memcheck.diff for details)
+A_memcheck                     pass
 Memory leak(s) found. See files listed below for details.
-  - ==857148==    definitely lost
+  - ==3046933==    definitely lost
 ========================================
  NOTICE: THIS TESTSUITE IS INCOMPLETE.
 YOU WILL BE GRADED ON OTHER TEST CASES.

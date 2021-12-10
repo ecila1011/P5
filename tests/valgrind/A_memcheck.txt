@@ -1,70 +1,8 @@
-==857148== Memcheck, a memory error detector
-==857148== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==857148== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
-==857148== Command: ../decaf inputs/sanity.decaf
-==857148== 
-==857148== Conditional jump or move depends on uninitialised value(s)
-==857148==    at 0x48DBAD8: __vfprintf_internal (vfprintf-internal.c:1687)
-==857148==    by 0x48C5DE9: fprintf (fprintf.c:32)
-==857148==    by 0x10C258: Operand_print (iloc.c:80)
-==857148==    by 0x10D88E: ILOCInsn_print (iloc.c:170)
-==857148==    by 0x10E919: InsnList_print (iloc.c:285)
-==857148==    by 0x11728F: main (main.c:162)
-==857148== 
-==857148== Use of uninitialised value of size 8
-==857148==    at 0x48BF81B: _itoa_word (_itoa.c:179)
-==857148==    by 0x48DB6F4: __vfprintf_internal (vfprintf-internal.c:1687)
-==857148==    by 0x48C5DE9: fprintf (fprintf.c:32)
-==857148==    by 0x10C258: Operand_print (iloc.c:80)
-==857148==    by 0x10D88E: ILOCInsn_print (iloc.c:170)
-==857148==    by 0x10E919: InsnList_print (iloc.c:285)
-==857148==    by 0x11728F: main (main.c:162)
-==857148== 
-==857148== Conditional jump or move depends on uninitialised value(s)
-==857148==    at 0x48BF82D: _itoa_word (_itoa.c:179)
-==857148==    by 0x48DB6F4: __vfprintf_internal (vfprintf-internal.c:1687)
-==857148==    by 0x48C5DE9: fprintf (fprintf.c:32)
-==857148==    by 0x10C258: Operand_print (iloc.c:80)
-==857148==    by 0x10D88E: ILOCInsn_print (iloc.c:170)
-==857148==    by 0x10E919: InsnList_print (iloc.c:285)
-==857148==    by 0x11728F: main (main.c:162)
-==857148== 
-==857148== Conditional jump or move depends on uninitialised value(s)
-==857148==    at 0x48DC3A8: __vfprintf_internal (vfprintf-internal.c:1687)
-==857148==    by 0x48C5DE9: fprintf (fprintf.c:32)
-==857148==    by 0x10C258: Operand_print (iloc.c:80)
-==857148==    by 0x10D88E: ILOCInsn_print (iloc.c:170)
-==857148==    by 0x10E919: InsnList_print (iloc.c:285)
-==857148==    by 0x11728F: main (main.c:162)
-==857148== 
-==857148== Conditional jump or move depends on uninitialised value(s)
-==857148==    at 0x48DB86E: __vfprintf_internal (vfprintf-internal.c:1687)
-==857148==    by 0x48C5DE9: fprintf (fprintf.c:32)
-==857148==    by 0x10C258: Operand_print (iloc.c:80)
-==857148==    by 0x10D88E: ILOCInsn_print (iloc.c:170)
-==857148==    by 0x10E919: InsnList_print (iloc.c:285)
-==857148==    by 0x11728F: main (main.c:162)
-==857148== 
-==857148== Conditional jump or move depends on uninitialised value(s)
-==857148==    at 0x10F52B: ILOCMachine_get_reg (iloc.c:636)
-==857148==    by 0x11144E: run_simulator (iloc.c:988)
-==857148==    by 0x1172A3: main (main.c:165)
-==857148== 
-==857148== Conditional jump or move depends on uninitialised value(s)
-==857148==    at 0x10F535: ILOCMachine_get_reg (iloc.c:636)
-==857148==    by 0x11144E: run_simulator (iloc.c:988)
-==857148==    by 0x1172A3: main (main.c:165)
-==857148== 
-==857148== Use of uninitialised value of size 8
-==857148==    at 0x10F561: ILOCMachine_get_reg (iloc.c:639)
-==857148==    by 0x11144E: run_simulator (iloc.c:988)
-==857148==    by 0x1172A3: main (main.c:165)
-==857148== 
-==857148== Use of uninitialised value of size 8
-==857148==    at 0x10F58D: ILOCMachine_get_reg (iloc.c:642)
-==857148==    by 0x11144E: run_simulator (iloc.c:988)
-==857148==    by 0x1172A3: main (main.c:165)
-==857148== 
+==3046933== Memcheck, a memory error detector
+==3046933== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==3046933== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==3046933== Command: ../decaf inputs/sanity.decaf
+==3046933== 
 main:
   push BP
   i2i SP => BP
@@ -158,19 +96,18 @@ other memory:  65528: -9999999
 
 Executing: return
 RETURN VALUE = 4
-==857148== 
-==857148== HEAP SUMMARY:
-==857148==     in use at exit: 11,704 bytes in 11 blocks
-==857148==   total heap usage: 1,779 allocs, 1,768 frees, 461,580 bytes allocated
-==857148== 
-==857148== LEAK SUMMARY:
-==857148==    definitely lost: 11,704 bytes in 11 blocks
-==857148==    indirectly lost: 0 bytes in 0 blocks
-==857148==      possibly lost: 0 bytes in 0 blocks
-==857148==    still reachable: 0 bytes in 0 blocks
-==857148==         suppressed: 0 bytes in 0 blocks
-==857148== Rerun with --leak-check=full to see details of leaked memory
-==857148== 
-==857148== Use --track-origins=yes to see where uninitialised values come from
-==857148== For lists of detected and suppressed errors, rerun with: -s
-==857148== ERROR SUMMARY: 14 errors from 9 contexts (suppressed: 0 from 0)
+==3046933== 
+==3046933== HEAP SUMMARY:
+==3046933==     in use at exit: 11,704 bytes in 11 blocks
+==3046933==   total heap usage: 1,779 allocs, 1,768 frees, 461,580 bytes allocated
+==3046933== 
+==3046933== LEAK SUMMARY:
+==3046933==    definitely lost: 11,704 bytes in 11 blocks
+==3046933==    indirectly lost: 0 bytes in 0 blocks
+==3046933==      possibly lost: 0 bytes in 0 blocks
+==3046933==    still reachable: 0 bytes in 0 blocks
+==3046933==         suppressed: 0 bytes in 0 blocks
+==3046933== Rerun with --leak-check=full to see details of leaked memory
+==3046933== 
+==3046933== For lists of detected and suppressed errors, rerun with: -s
+==3046933== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
