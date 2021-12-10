@@ -103,23 +103,23 @@ int allocate(int vr)
     {
         // Check if there's a free physical register
         // Invalid Im guessing is less than 0 but there's no INVALID enum
-        if (name[i] == 0)
+        if (name[i] < 0)
         {
             // Set name[pr] to vr
             name[i] = vr;
+            
             // Return the physical register
             return i;
         }
-        else
-        {
-            // find pr that maximizes dist(name[pr])
-            // spill(pr)
-            // name[pr] = vr
-            // return pr
-        }
     }
+     
+    // find pr that maximizes dist(name[pr])
+    // spill(pr)
+    // name[pr] = vr
+    // return pr
+        
 
-    return 0;
+    return 9999;
     // **Ignoring Spilling RN
 
     // If there's no free registers, then spill the physical register ya want to use to stack
@@ -135,31 +135,58 @@ int ensure(int vr)
         // If the vr is in there (check the ID), then return the physical register
         if (name[i] == vr)
         {
-            return name[i];
-        }
-        else
-        {
-            int pr = allocate(vr);
-            if (offset[vr] != EMPTY) 
-            {
-                insert_load(offset[vr], pr, NULL);
-            }
+            return i;
         }
     }
+        
+    // otherwise, allocate a phys reg
+    int pr = allocate(vr);
 
-    // If not... allocate a physical register using allocate()
-    // **Ignoring Spilling RN
-    return allocate(vr);
-    // If vr had to be spilled, then load it into a physical register using offset[vr id]
-    // Return the physical register
+    // if vr was spilled, load it
+    if (offset[vr] > 0) 
+    {
+        insert_load(offset[vr], pr, NULL);
+    }
+        
+    return pr;
 }
 
 // Spill Method
 
 // Dist method
-int dist(Operand vr)
+int dist(int vr, ILOCInsn *ins)
 {
-    return 9999;
+    int lines = 0;
+    bool used = false;
+
+    while (!used && ins != NULL)
+    {
+        // get read registers and make a list of operands
+        ILOCInsn *readregs = ILOCInsn_get_read_registers(ins);
+        Operand* list = readregs->op;
+
+        // for each read register in i
+        for (int i = 0; i < 3; i++)
+        {
+            if (list[i].type != EMPTY && list[i].id == vr)
+            {
+                used = true;
+            }
+        }
+
+        // increment lines and instruction
+        lines += 1;
+        ins = ins->next;
+    }
+
+    if (used)
+    {
+        return lines;
+    }
+    else
+    {
+        return 9999;
+    }
 }
 
 /**
@@ -170,41 +197,53 @@ int dist(Operand vr)
  */
 void allocate_registers(InsnList *list, int num_physical_registers)
 {
+    for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
+        {
+            name[i] = -1;
+        }
+
     // for each instruction i in program
     FOR_EACH(ILOCInsn *, i, list)
     {
-
         // save reference to stack allocator instruction if i is a call label
         if (i->form == CALL)
         {
-            // idk how to implement this lol
-            // reset name and offset
+
         }
 
-        if (i->form == JUMP) 
+        // reset name[] and offset[] if i is a leader
+        if (i->form == JUMP || i->form == CALL) 
         {
-            // reset name and offset
-        }
+            // // reset name[]
+            // for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
+            // {
+            //     name[i] = -1;
+            // }
 
-        // also dont know how to do this
+            // // reset offset[]
+            // for (int i = 0; i < MAX_VIRTUAL_REGS; i++)
+            // {
+            //     offset[i] = -1;
+            // }
+        }
 
         // get read registers and make a list of operands
         ILOCInsn *readregs = ILOCInsn_get_read_registers(i);
-        Operand* list = readregs->op;
+        Operand* regs = readregs->op;
         int count = -1;
 
         // for each read register in i
         for (int index = 0; index < 3; index++)
         {
-            if (list[index].type != EMPTY)
+            if (regs[index].type != EMPTY)
             {
                 count += 1;
 
-                int pr = ensure(list[index].id);          // make sure vr is in a phys reg
-                i->op[index].id = pr;                    // change register id
+                int pr = ensure(regs[index].id);          // make sure vr is in a phys reg
+                replace_register(regs[index].id, pr, i);                   // change register id
 
                 // if no future use
-                if (dist(list[index]) >= 9999) {
+                if (dist(regs[index].id, i->next) == 9999) {
                     // then free pr
                     name[pr] = -1; 
                 }
@@ -217,10 +256,11 @@ void allocate_registers(InsnList *list, int num_physical_registers)
         if (writereg.type != EMPTY)
         {
             int pr = allocate(writereg.id);          // make sure pr is available
+            //replace_register(i->op[count+1].id, pr, i);
             //i->op[count+1].id = pr;                    // change register id
 
             // if no future use
-            if (dist(writereg) >= 9999) {
+            if (dist(writereg.id, i->next) >= 9999) {
                 // then free pr
                 name[pr] = -1; 
             }
