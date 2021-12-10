@@ -22,6 +22,10 @@ int name[MAX_PHYSICAL_REGS];
 // offset : virtual register id => int
 int offset[MAX_VIRTUAL_REGS];
 
+// tracks stack offset for spilled virtual registers
+// offset : virtual register id => int
+ILOCInsn *allocator;
+
 /**
  * @brief Insert a store instruction to spill a register to the stack
  * 
@@ -127,7 +131,7 @@ int allocate(int vr)
     // Return the physical register
 }
 
-int ensure(int vr)
+int ensure(int vr, ILOCInsn *insn)
 {
     // Loop through physical registers (In the name array)
     for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
@@ -144,14 +148,20 @@ int ensure(int vr)
 
     // if vr was spilled, load it
     if (offset[vr] > 0) 
-    {
-        insert_load(offset[vr], pr, NULL);
+    { // I dont know what to use in this function call instead of insn
+        insert_load(offset[vr], pr, insn);
     }
         
     return pr;
 }
 
 // Spill Method
+void spill(int pr, ILOCInsn *curr)
+{
+    int x = insert_spill(pr, curr, allocator);
+    offset[name[pr]] = x;
+    name[pr] = -1;
+}
 
 // Dist method
 int dist(int vr, ILOCInsn *ins)
@@ -168,7 +178,7 @@ int dist(int vr, ILOCInsn *ins)
         // for each read register in i
         for (int i = 0; i < 3; i++)
         {
-            if (list[i].type != EMPTY && list[i].id == vr)
+            if (list[i].type == VIRTUAL_REG && list[i].id == vr)
             {
                 used = true;
             }
@@ -197,53 +207,57 @@ int dist(int vr, ILOCInsn *ins)
  */
 void allocate_registers(InsnList *list, int num_physical_registers)
 {
+    // make sure list is not null
+    if (list == NULL)
+    {
+        return;
+    }
+
+
     for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
         {
             name[i] = -1;
         }
 
     // for each instruction i in program
-    FOR_EACH(ILOCInsn *, i, list)
+    FOR_EACH(ILOCInsn *, insn, list)
     {
         // save reference to stack allocator instruction if i is a call label
-        if (i->form == CALL)
+        if (insn->form == CALL)
         {
-
+            allocator = insn;
         }
 
         // reset name[] and offset[] if i is a leader
-        if (i->form == JUMP || i->form == CALL) 
+        if (insn->form == JUMP || insn->form == CALL) 
         {
-            // // reset name[]
-            // for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
-            // {
-            //     name[i] = -1;
-            // }
+            // reset name[]
+            for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
+            {
+                name[i] = -1;
+            }
 
-            // // reset offset[]
-            // for (int i = 0; i < MAX_VIRTUAL_REGS; i++)
-            // {
-            //     offset[i] = -1;
-            // }
+            // reset offset[]
+            for (int i = 0; i < MAX_VIRTUAL_REGS; i++)
+            {
+                offset[i] = -1;
+            }
         }
 
         // get read registers and make a list of operands
-        ILOCInsn *readregs = ILOCInsn_get_read_registers(i);
+        ILOCInsn *readregs = ILOCInsn_get_read_registers(insn);
         Operand* regs = readregs->op;
-        int count = -1;
 
         // for each read register in i
         for (int index = 0; index < 3; index++)
         {
-            if (regs[index].type != EMPTY)
+            if (regs[index].type == VIRTUAL_REG)
             {
-                count += 1;
-
-                int pr = ensure(regs[index].id);          // make sure vr is in a phys reg
-                replace_register(regs[index].id, pr, i);                   // change register id
+                int pr = ensure(regs[index].id, insn);          // make sure vr is in a phys reg
+                replace_register(regs[index].id, pr, insn);  // change register id
 
                 // if no future use
-                if (dist(regs[index].id, i->next) == 9999) {
+                if (dist(regs[index].id, insn->next) == 9999) {
                     // then free pr
                     name[pr] = -1; 
                 }
@@ -251,31 +265,52 @@ void allocate_registers(InsnList *list, int num_physical_registers)
         }
 
         // get write register
-        Operand writereg = ILOCInsn_get_write_register(i);
+        Operand writereg = ILOCInsn_get_write_register(insn);
 
-        if (writereg.type != EMPTY)
+        if (writereg.type == VIRTUAL_REG)
         {
+            int ops = 0;
+            switch (insn->form)
+            {
+                case ADD: case SUB: case MULT: case DIV: case AND: case OR:
+                case CMP_LT: case CMP_LE: case CMP_EQ: case CMP_NE: case CMP_GE: case CMP_GT:
+                case ADD_I: case MULT_I:
+                case LOAD_AI: case LOAD_AO:
+                case PHI:
+                    ops = 2;
+                    break;
+                case LOAD: case LOAD_I:
+                case NOT: case NEG:
+                case I2I:
+                    ops = 1;
+                    break;
+                case POP:
+                    ops = 0;
+                    break;
+                default:
+                    ops = -1;
+            }
+
             int pr = allocate(writereg.id);          // make sure pr is available
-            //replace_register(i->op[count+1].id, pr, i);
-            //i->op[count+1].id = pr;                    // change register id
+            replace_register(insn->op[ops].id, pr, insn);
 
             // if no future use
-            if (dist(writereg.id, i->next) >= 9999) {
+            if (dist(writereg.id, insn->next) >= 9999) {
                 // then free pr
                 name[pr] = -1; 
             }
         }
 
-
-        // ILOCInsn *readregs = ILOCInsn_get_read_registers(i);
-        // Operand* list = readregs->op;
-        // for (int index = 0; index < 3; index++)
-        // {
-        //     if (list[index].type != EMPTY)
-        //     {
-        //         Operand pr = allocate(list[index]);
-        //         // replace_register(list[index].id, pr.id, i);
-        //     }
-        // }
+        // spill any live registers before procedure calls
+        if (insn->form == CALL) // if insn is a call instruction
+        {
+            for (int i = 0; i < MAX_PHYSICAL_REGS; i++) // for each pr where name[pr] != INVALID
+            {
+                if (name[i] >= 0) // spill
+                { 
+                    spill(i, insn);
+                }
+            }
+        }
     }
 }
