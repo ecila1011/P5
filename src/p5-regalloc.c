@@ -106,7 +106,6 @@ int allocate(int vr)
     for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
     {
         // Check if there's a free physical register
-        // Invalid Im guessing is less than 0 but there's no INVALID enum
         if (name[i] < 0)
         {
             // Set name[pr] to vr
@@ -116,19 +115,8 @@ int allocate(int vr)
             return i;
         }
     }
-     
-    // find pr that maximizes dist(name[pr])
-    // spill(pr)
-    // name[pr] = vr
-    // return pr
-        
 
     return 9999;
-    // **Ignoring Spilling RN
-
-    // If there's no free registers, then spill the physical register ya want to use to stack
-    // Set the name[pr] to the vr id
-    // Return the physical register
 }
 
 int ensure(int vr, ILOCInsn *insn)
@@ -148,7 +136,7 @@ int ensure(int vr, ILOCInsn *insn)
 
     // if vr was spilled, load it
     if (offset[vr] > 0) 
-    { // I dont know what to use in this function call instead of insn
+    { 
         insert_load(offset[vr], pr, insn);
     }
         
@@ -197,6 +185,7 @@ int dist(int vr, ILOCInsn *ins)
     {
         return 9999;
     }
+
 }
 
 /**
@@ -213,7 +202,7 @@ void allocate_registers(InsnList *list, int num_physical_registers)
         return;
     }
 
-
+    // initialize phys registers to -1 since they are not in use
     for (int i = 0; i < MAX_PHYSICAL_REGS; i++)
         {
             name[i] = -1;
